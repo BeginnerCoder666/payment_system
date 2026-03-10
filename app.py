@@ -3,12 +3,12 @@ import sqlite3
 
 app = Flask(__name__)
 DB_FILE = 'canteen.db'
-# NI-
+
 def get_db_connection():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
     return conn
-#ballsacks yes
+
 @app.route('/')
 def index():
     return render_template('index.html')
