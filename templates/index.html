@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>0 Piso Dashboard</title>
-    <link rel="stylesheet" href="styles/index.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
 </head>
 <body>
     <header>
@@ -19,7 +19,7 @@
         <div class="section-label">Quick Actions</div>
         <nav class="nav-grid">
 
-            <a href="templates/register.html" class="nav-card">
+            <a href="register.html" class="nav-card">
                 <span class="card-icon">🪪</span>
                 <span class="card-number">01</span>
                 <h2>Register Student</h2>
@@ -27,7 +27,7 @@
                 <div class="card-arrow">Open &rarr;</div>
             </a>
 
-            <a href="templates/payment.html" class="nav-card">
+            <a href="payment.html" class="nav-card">
                 <span class="card-icon">🛒</span>
                 <span class="card-number">02</span>
                 <h2>Process Payment</h2>
@@ -35,7 +35,7 @@
                 <div class="card-arrow">Open &rarr;</div>
             </a>
 
-            <a href="templates/topup.html" class="nav-card">
+            <a href="topup.html" class="nav-card">
                 <span class="card-icon">💳</span>
                 <span class="card-number">03</span>
                 <h2>Top-Up Card</h2>
@@ -43,7 +43,7 @@
                 <div class="card-arrow">Open &rarr;</div>
             </a>
 
-            <a href="templates/check_balance.html" class="nav-card">
+            <a href="check_balance.html" class="nav-card">
                 <span class="card-icon">📊</span>
                 <span class="card-number">04</span>
                 <h2>Check Balance</h2>
