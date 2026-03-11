@@ -13,7 +13,7 @@ def get_db_connection():
 def index():
     return render_template('index.html')
 
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/register.html', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         uid = request.form['uid']
@@ -29,7 +29,7 @@ def register():
             conn.close()
     return render_template('register.html')
 
-@app.route('/payment', methods=['GET', 'POST'])
+@app.route('/payment.html', methods=['GET', 'POST'])
 def payment():
     if request.method == 'POST':
         uid = request.form['uid']
@@ -48,7 +48,7 @@ def payment():
         return "Error: Insufficient funds or card not found! <a href='/payment'>Back</a>"
     return render_template('payment.html')
 
-@app.route('/topup', methods=['GET', 'POST'])
+@app.route('/topup.html', methods=['GET', 'POST'])
 def topup():
     if request.method == 'POST':
         uid = request.form['uid']
@@ -61,7 +61,7 @@ def topup():
         return "Top-up Successful! <a href='/topup'>Back</a>"
     return render_template('topup.html')
 
-@app.route('/check_balance', methods=['GET', 'POST'])
+@app.route('/check_balance.html', methods=['GET', 'POST'])
 def check_balance():
     if request.method == 'POST':
         uid = request.form['uid']
