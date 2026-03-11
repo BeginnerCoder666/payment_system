@@ -2,17 +2,33 @@
 <html>
 <head>
     <title>0 Piso Payment Screen</title>
-    <link rel="stylesheet" href="../styles/style.css">
+    <link rel="stylesheet" href="../styles/child.css">
 </head>
 <body>
-    <h1>POS Terminal</h1>
-    <form action="/payment.html" method="POST">
-        <label>Meal Price:</label><br>
-        <input type="number" name="price" step="0.01" required><br><br>
-        <label>Tap Card to Pay:</label><br>
-        <input type="text" name="uid" placeholder="Waiting for tap..." autofocus required><br><br>
-        <button type="submit">Confirm Purchase</button>
-    </form>
-    <br><a href="../index.html">Back to Home</a>
+    <nav class="navbar">
+        <a href="../index.html" class="brand"><span>0</span> Piso</a>
+        <div class="nav-links">
+            <a href="register.html"><span class="nav-icon">🪪</span> Register</a>
+            <a href="payment.html" class="active"><span class="nav-icon">🛒</span> Payment</a>
+            <a href="topup.html"><span class="nav-icon">💳</span> Top-Up</a>
+            <a href="check_balance.html"><span class="nav-icon">📊</span> Balance</a>
+        </div>
+    </nav>
+    
+    <main>
+        <h1>POS Terminal</h1>
+        <br><form action="/payment.html" method="POST">
+            <label>Meal Price:</label>
+            <input type="number" name="price" step="0.01" required><br><br>
+            <label>Tap Card to Pay:</label>
+            <input type="text" name="uid" placeholder="Waiting for tap..." autofocus required><br>
+            <button type="submit" class="btn">Confirm Purchase</button>
+        </form>
+    </main>
+
+    <footer>
+        <span>0 Piso Cash Card System &mdash; Localhost</span>
+        <span class="version">v1.0</span>
+    </footer>
 </body>
 </html>

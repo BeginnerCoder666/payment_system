@@ -2,27 +2,25 @@
 <html>
 <head>
     <title>0 Piso Balance Check</title>
-    <link rel="stylesheet" href="../styles/style.css">
-    <link rel="stylesheet" href="../styles/index.css">
+    <link rel="stylesheet" href="../styles/child.css">
 </head>
 <body>
-    <header>
-        <div class="logo-block">
-            <div class="eyebrow">0 Piso Cash Card System</div>
-            <h1><span>0</span> Piso Balance Check</h1>
+    <nav class="navbar">
+        <a href="../index.html" class="brand"><span>0</span> Piso</a>
+        <div class="nav-links">
+            <a href="register.html"><span class="nav-icon">🪪</span> Register</a>
+            <a href="payment.html"><span class="nav-icon">🛒</span> Payment</a>
+            <a href="topup.html"><span class="nav-icon">💳</span> Top-Up</a>
+            <a href="check_balance.html" class="active"><span class="nav-icon">📊</span> Balance</a>
         </div>
-        <div class="header-meta">
-            <div class="status-dot">System Online</div>
-        </div>
-    </header>
+    </nav>
     
-    <main>
+    <main> <!-- actual place to view balance not here -->
         <h1>Check Balance</h1>
-        <form action="/check_balance.html" method="POST">
-            <input type="text" name="uid" placeholder="Tap Card" autofocus required><br><br>
-            <button type="submit">View Balance</button>
+        <br><form action="/check_balance.html" method="POST">
+            <input type="text" name="uid" placeholder="Tap Card" autofocus required><br>
+            <button type="submit" class="btn">View Balance</button>
         </form>
-        <br><a href="../index.html">Back to Home</a>
     </main>
 
     <footer>
