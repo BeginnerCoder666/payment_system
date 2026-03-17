@@ -6,7 +6,7 @@ echo Starting 0 Piso Canteen System...
 start /b python app.py
 
 :: Wait for 4 seconds to let the server initialize
-timeout /t 4 /nobreak >nul
+timeout /t 2 /nobreak >nul
 
 :: Open the browser after the delay
 start http://127.0.0.1:5000
