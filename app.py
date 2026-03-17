@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, session, redirect, url_for, R
 import sqlite3
 import csv
 import io
+import os
 
 app = Flask(__name__)
 app.secret_key = 'admin2526'
@@ -98,38 +99,42 @@ def check_balance():
             message = "Error: Card not found."
     return render_template('check_balance.html', message=message)
 
-@app.route('/admin.html', methods=['GET', 'POST'])
+@app.route('/admin', methods=['GET', 'POST'])
 def admin():
-    error = None
+    conn = get_db_connection()
+    # Check if admin credentials are set in the database
+    admin_config = conn.execute("SELECT * FROM config WHERE key = 'admin_user'").fetchone()
     
-    # --- 1. SET YOUR LOGIN CREDENTIALS HERE ---
-    ADMIN_USERNAME = 'admin' 
-    ADMIN_PASSWORD = 'admin'
+    # --- FIRST RUN: SET CREDENTIALS ---
+    if not admin_config:
+        if request.method == 'POST' and 'new_user' in request.form:
+            u = request.form['new_user']
+            p = request.form['new_pass']
+            conn.execute("INSERT INTO config (key, value) VALUES ('admin_user', ?)", (u,))
+            conn.execute("INSERT INTO config (key, value) VALUES ('admin_pass', ?)", (p,))
+            conn.commit()
+            conn.close()
+            return redirect(url_for('admin'))
+        return render_template('admin.html', setup_mode=True)
 
-    # Handle Login Attempt
+    # --- NORMAL LOGIN LOGIC ---
+    error = None
     if request.method == 'POST' and 'username' in request.form:
-        username = request.form['username']
-        password = request.form['password']
+        stored_user = conn.execute("SELECT value FROM config WHERE key = 'admin_user'").fetchone()['value']
+        stored_pass = conn.execute("SELECT value FROM config WHERE key = 'admin_pass'").fetchone()['value']
         
-        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        if request.form['username'] == stored_user and request.form['password'] == stored_pass:
             session['logged_in'] = True
         else:
-            error = "Invalid Username or Password"
+            error = "Invalid Credentials"
 
-    # If NOT logged in, show page with Overlay and NO data
     if not session.get('logged_in'):
-        return render_template('admin.html', logged_in=False, error=error, history=[])
+        conn.close()
+        return render_template('admin.html', logged_in=False, error=error)
 
-    # If logged in, fetch the data for the table
-    conn = get_db_connection()
-    history = conn.execute('''
-        SELECT transactions.timestamp, students.name, transactions.amount 
-        FROM transactions 
-        JOIN students ON transactions.card_uid = students.card_uid 
-        ORDER BY transactions.timestamp DESC
-    ''').fetchall()
+    # --- LOAD DATA ---
+    history = conn.execute('SELECT t.timestamp, s.name, t.amount FROM transactions t JOIN students s ON t.card_uid = s.card_uid ORDER BY t.timestamp DESC').fetchall()
     conn.close()
-    
     return render_template('admin.html', logged_in=True, history=history)
 
 @app.route('/logout')
@@ -178,6 +183,19 @@ def wipe_db():
 @app.context_processor
 def inject_version():
     return dict(version="v0.2.5-BETA")
+
+def init_db():
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    # Create tables if they don't exist
+    conn.execute('CREATE TABLE IF NOT EXISTS students (card_uid TEXT PRIMARY KEY, name TEXT, balance REAL)')
+    conn.execute('CREATE TABLE IF NOT EXISTS transactions (id INTEGER PRIMARY KEY AUTOINCREMENT, card_uid TEXT, amount REAL, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)')
+    # New table for Admin Credentials
+    conn.execute('CREATE TABLE IF NOT EXISTS config (key TEXT PRIMARY KEY, value TEXT)')
+    conn.commit()
+    conn.close()
+
+init_db()
 
 if __name__ == '__main__':
     app.run(debug=True)

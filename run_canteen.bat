@@ -1,4 +1,11 @@
 @echo off
+:: Check if Flask is installed
+python -c "import flask" 2>nul
+if %errorlevel% neq 0 (
+    echo Flask not found. Installing dependencies...
+    pip install flask
+)
+
 title 0 Piso Cash Card System
 echo Starting 0 Piso Canteen System...
 
