@@ -30,12 +30,12 @@ def register():
         try:
             conn.execute("INSERT INTO students (card_uid, name, balance) VALUES (?, ?, 0)", (uid, name))
             conn.commit()
-            return "Registration Successful! <a href='/register'>Back</a>"
+            message = f"Success: {name} registered with ID {uid}."
         except sqlite3.IntegrityError:
-            return "Error: Card already registered! <a href='/register'>Back</a>"
+            message = "Error: This card is already registered."
         finally:
             conn.close()
-    return render_template('register.html')
+    return render_template('register.html', message=message)
 
 @app.route('/payment.html', methods=['GET', 'POST'])
 def payment():
@@ -51,10 +51,11 @@ def payment():
             conn.execute("INSERT INTO transactions (card_uid, amount) VALUES (?, ?)", (uid, -price))
             conn.commit()
             conn.close()
-            return f"Success! Remaining: P{new_balance} <a href='/payment'>Back</a>"
+            message = f"Success! New Balance: P{new_balance}" # Set the success message
+        else:
+            message = "Error: Insufficient funds or card not found!" # Set the error message
         conn.close()
-        return "Error: Insufficient funds or card not found! <a href='/payment'>Back</a>"
-    return render_template('payment.html')
+    return render_template('payment.html', message=message)
 
 @app.route('/topup.html', methods=['GET', 'POST'])
 def topup():
@@ -66,8 +67,8 @@ def topup():
         conn.execute("INSERT INTO transactions (card_uid, amount) VALUES (?, ?)", (uid, amount))
         conn.commit()
         conn.close()
-        return "Top-up Successful! <a href='/topup'>Back</a>"
-    return render_template('topup.html')
+        message = f"Top-up Success! P{amount} added to card {uid}."
+    return render_template('topup.html', message=message)
 
 @app.route('/check_balance.html', methods=['GET', 'POST'])
 def check_balance():
@@ -77,9 +78,10 @@ def check_balance():
         student = conn.execute("SELECT * FROM students WHERE card_uid = ?", (uid,)).fetchone()
         conn.close()
         if student:
-            return f"Student: {student['name']} | Balance: P{student['balance']} <a href='/check_balance'>Back</a>"
-        return "Card not found! <a href='/check_balance'>Back</a>"
-    return render_template('check_balance.html')
+            message = f"Name: {student['name']} | Current Balance: P{student['balance']}"
+        else:
+            message = "Error: Card not found."
+    return render_template('check_balance.html', message=message)
 
 if __name__ == '__main__':
     app.run(debug=True)

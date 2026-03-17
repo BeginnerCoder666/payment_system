@@ -24,6 +24,12 @@
             <input type="text" name="uid" placeholder="Waiting for tap..." autofocus required><br>
             <button type="submit" class="btn">Confirm Purchase</button>
         </form>
+
+        {% if message %}
+            <div class="result-box">
+                <p>{{ message }}</p>
+            </div>
+        {% endif %}
     </main>
 
     <footer>

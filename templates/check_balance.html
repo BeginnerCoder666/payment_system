@@ -21,6 +21,12 @@
             <input type="text" name="uid" placeholder="Tap Card" autofocus required><br>
             <button type="submit" class="btn">View Balance</button>
         </form>
+
+        {% if message %}
+            <div class="result-box">
+                <p>{{ message }}</p>
+            </div>
+        {% endif %}
     </main>
 
     <footer>
