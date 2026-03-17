@@ -4,7 +4,7 @@ import csv
 import io
 
 app = Flask(__name__)
-app.secret_key = '0piso_super_secret_key'
+app.secret_key = 'admin2526'
 DB_FILE = 'canteen.db'
 
 # Add Export to .csv button in the main page
@@ -135,7 +135,7 @@ def admin():
 @app.route('/logout')
 def logout():
     session.pop('logged_in', None) # Removes the "logged_in" tag from the session
-    return redirect(url_for('admin'))
+    return redirect(url_for('index'))
 
 @app.route('/export_csv')
 def export_csv():
@@ -174,6 +174,10 @@ def wipe_db():
     conn.commit()
     conn.close()
     return redirect(url_for('admin'))
+
+@app.context_processor
+def inject_version():
+    return dict(version="v0.2.5-BETA")
 
 if __name__ == '__main__':
     app.run(debug=True)
