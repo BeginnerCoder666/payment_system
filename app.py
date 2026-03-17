@@ -99,7 +99,7 @@ def check_balance():
             message = "Error: Card not found."
     return render_template('check_balance.html', message=message)
 
-@app.route('/admin', methods=['GET', 'POST'])
+@app.route('/admin.html', methods=['GET', 'POST'])
 def admin():
     conn = get_db_connection()
     # Check if admin credentials are set in the database
