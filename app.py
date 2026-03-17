@@ -1,7 +1,10 @@
 from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
+import csv
+import io
 
 app = Flask(__name__)
+app.secret_key = '0piso_super_secret_key'
 DB_FILE = 'canteen.db'
 
 # Add Export to .csv button in the main page
@@ -66,11 +69,19 @@ def topup():
         uid = request.form['uid']
         amount = float(request.form['amount'])
         conn = get_db_connection()
-        conn.execute("UPDATE students SET balance = balance + ? WHERE card_uid = ?", (amount, uid))
-        conn.execute("INSERT INTO transactions (card_uid, amount) VALUES (?, ?)", (uid, amount))
-        conn.commit()
+        student = conn.execute("SELECT name FROM students WHERE card_uid = ?", (uid,)).fetchone()
+        if student:
+            # 2. If the student exists, update their balance
+            conn.execute("UPDATE students SET balance = balance + ? WHERE card_uid = ?", (amount, uid))
+            conn.execute("INSERT INTO transactions (card_uid, amount) VALUES (?, ?)", (uid, amount))
+            conn.commit()
+            
+            # 3. Create the personalized message using the name from the database
+            message = f"Top-up Success! P{amount:.2f} added to {student['name']}'s account."
+        else:
+            # Handle the case where the card isn't registered yet
+            message = "Error: Card not found. Please register the card first."
         conn.close()
-        message = f"Top-up Success! P{amount} added to card {uid}."
     return render_template('topup.html', message=message)
 
 @app.route('/check_balance.html', methods=['GET', 'POST'])
@@ -86,6 +97,32 @@ def check_balance():
         else:
             message = "Error: Card not found."
     return render_template('check_balance.html', message=message)
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    error = None
+    # Handle the login form submission
+    if request.method == 'POST' and 'username' in request.form:
+        if request.form['username'] == 'admin' and request.form['password'] == 'admin':
+            session['logged_in'] = True
+        else:
+            error = "Invalid Credentials"
+
+    # If NOT logged in, show the page with the login overlay active
+    if not session.get('logged_in'):
+        return render_template('admin.html', logged_in=False, error=error, history=[])
+
+    # If logged in, fetch the data
+    conn = get_db_connection()
+    history = conn.execute('''
+        SELECT transactions.timestamp, students.name, transactions.amount 
+        FROM transactions 
+        JOIN students ON transactions.card_uid = students.card_uid 
+        ORDER BY transactions.timestamp DESC
+    ''').fetchall()
+    conn.close()
+    
+    return render_template('admin.html', logged_in=True, history=history)
 
 if __name__ == '__main__':
     app.run(debug=True)
