@@ -23,6 +23,7 @@ def home():
 
 @app.route('/register.html', methods=['GET', 'POST'])
 def register():
+    message = None
     if request.method == 'POST':
         uid = request.form['uid']
         name = request.form['name']
@@ -39,6 +40,7 @@ def register():
 
 @app.route('/payment.html', methods=['GET', 'POST'])
 def payment():
+    message = None
     if request.method == 'POST':
         uid = request.form['uid']
         price = float(request.form['price'])
@@ -59,6 +61,7 @@ def payment():
 
 @app.route('/topup.html', methods=['GET', 'POST'])
 def topup():
+    message = None
     if request.method == 'POST':
         uid = request.form['uid']
         amount = float(request.form['amount'])
@@ -72,6 +75,7 @@ def topup():
 
 @app.route('/check_balance.html', methods=['GET', 'POST'])
 def check_balance():
+    message = None
     if request.method == 'POST':
         uid = request.form['uid']
         conn = get_db_connection()
