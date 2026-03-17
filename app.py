@@ -182,7 +182,7 @@ def wipe_db():
 
 @app.context_processor
 def inject_version():
-    return dict(version="v0.2.5-BETA")
+    return dict(version="v0.2.12-ALPHA")
 
 def init_db():
     conn = sqlite3.connect(DB_FILE)
