@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, session, redirect, url_for, Response
 import sqlite3
 import csv
 import io
@@ -98,21 +98,29 @@ def check_balance():
             message = "Error: Card not found."
     return render_template('check_balance.html', message=message)
 
-@app.route('/admin', methods=['GET', 'POST'])
+@app.route('/admin.html', methods=['GET', 'POST'])
 def admin():
     error = None
-    # Handle the login form submission
+    
+    # --- 1. SET YOUR LOGIN CREDENTIALS HERE ---
+    ADMIN_USERNAME = 'admin' 
+    ADMIN_PASSWORD = 'admin'
+
+    # Handle Login Attempt
     if request.method == 'POST' and 'username' in request.form:
-        if request.form['username'] == 'admin' and request.form['password'] == 'admin':
+        username = request.form['username']
+        password = request.form['password']
+        
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
             session['logged_in'] = True
         else:
-            error = "Invalid Credentials"
+            error = "Invalid Username or Password"
 
-    # If NOT logged in, show the page with the login overlay active
+    # If NOT logged in, show page with Overlay and NO data
     if not session.get('logged_in'):
         return render_template('admin.html', logged_in=False, error=error, history=[])
 
-    # If logged in, fetch the data
+    # If logged in, fetch the data for the table
     conn = get_db_connection()
     history = conn.execute('''
         SELECT transactions.timestamp, students.name, transactions.amount 
@@ -123,6 +131,49 @@ def admin():
     conn.close()
     
     return render_template('admin.html', logged_in=True, history=history)
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None) # Removes the "logged_in" tag from the session
+    return redirect(url_for('admin'))
+
+@app.route('/export_csv')
+def export_csv():
+    if not session.get('logged_in'):
+        return redirect(url_for('admin'))
+    
+    conn = get_db_connection()
+    cursor = conn.execute("SELECT * FROM transactions")
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ID', 'Card UID', 'Amount', 'Timestamp'])
+    writer.writerows(cursor.fetchall())
+    conn.close()
+    
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-disposition": "attachment; filename=canteen_report.csv"}
+    )
+
+@app.route('/wipe_db', methods=['POST'])
+def wipe_db():
+    if not session.get('logged_in'):
+        return redirect(url_for('admin'))
+    
+    conn = get_db_connection()
+    # 1. Delete all data
+    conn.execute("DELETE FROM transactions")
+    conn.execute("DELETE FROM students")
+    
+    # 2. Reset the ID counters back to 0
+    conn.execute("DELETE FROM sqlite_sequence WHERE name='transactions'")
+    conn.execute("DELETE FROM sqlite_sequence WHERE name='students'")
+    
+    conn.commit()
+    conn.close()
+    return redirect(url_for('admin'))
 
 if __name__ == '__main__':
     app.run(debug=True)
