@@ -3,6 +3,8 @@ import sqlite3
 import csv
 import io
 import os
+from datetime import datetime, timedelta
+import pytz
 
 app = Flask(__name__)
 app.secret_key = 'admin2526'
@@ -16,6 +18,11 @@ def get_db_connection():
     conn = sqlite3.connect(DB_FILE)
     conn.row_factory = sqlite3.Row
     return conn
+
+def get_local_time():
+    # Change 'Asia/Manila' to your specific timezone if different
+    tz = pytz.timezone('Asia/Manila')
+    return datetime.now(tz).strftime('%Y-%m-%d %I:%M %p')
 
 @app.route('/')
 def index():
@@ -33,7 +40,7 @@ def register():
         name = request.form['name']
         conn = get_db_connection()
         try:
-            conn.execute("INSERT INTO students (card_uid, name, balance) VALUES (?, ?, 0)", (uid, name))
+            conn.execute("INSERT INTO students (card_uid, name, balance) VALUES (?, ?, 0.0)", (uid, name))
             conn.commit()
             message = f"Success: {name} registered with ID {uid}."
         except sqlite3.IntegrityError:
@@ -49,17 +56,28 @@ def payment():
         uid = request.form['uid']
         price = float(request.form['price'])
         conn = get_db_connection()
+        
+        # 1. First, check if the card exists
         student = conn.execute("SELECT * FROM students WHERE card_uid = ?", (uid,)).fetchone()
         
-        if student and student['balance'] >= price:
-            new_balance = student['balance'] - price
-            conn.execute("UPDATE students SET balance = ? WHERE card_uid = ?", (new_balance, uid))
-            conn.execute("INSERT INTO transactions (card_uid, amount) VALUES (?, ?)", (uid, -price))
-            conn.commit()
-            conn.close()
-            message = f"Success! New Balance: P{new_balance}" # Set the success message
+        if not student:
+            message = "❌ Error: Card not registered! Please go to Registration."
+        
+        # 2. If it exists, check the funds
+        elif student['balance'] < price:
+            message = f"⚠️ Error: Lacking funds! Current balance is only P{student['balance']:.2f}"
+            
+        # 3. If everything is okay, proceed with payment
         else:
-            message = "Error: Insufficient funds or card not found!" # Set the error message
+            new_balance = student['balance'] - price
+            local_time = get_local_time()
+            
+            conn.execute("UPDATE students SET balance = ? WHERE card_uid = ?", (new_balance, uid))
+            conn.execute("INSERT INTO transactions (card_uid, amount, timestamp) VALUES (?, ?, ?)", 
+                         (uid, -price, local_time))
+            conn.commit()
+            message = f"Payment Successful! New Balance: P{new_balance:.2f}"
+        
         conn.close()
     return render_template('payment.html', message=message)
 
@@ -71,16 +89,17 @@ def topup():
         amount = float(request.form['amount'])
         conn = get_db_connection()
         student = conn.execute("SELECT name FROM students WHERE card_uid = ?", (uid,)).fetchone()
+        
         if student:
-            # 2. If the student exists, update their balance
             conn.execute("UPDATE students SET balance = balance + ? WHERE card_uid = ?", (amount, uid))
-            conn.execute("INSERT INTO transactions (card_uid, amount) VALUES (?, ?)", (uid, amount))
-            conn.commit()
+            local_time = get_local_time()
+            conn.execute("INSERT INTO transactions (card_uid, amount, timestamp) VALUES (?, ?, ?)", (uid, amount, local_time))
             
-            # 3. Create the personalized message using the name from the database
+            # --- CRITICAL FIX: Add this line ---
+            conn.commit() 
+            
             message = f"Top-up Success! P{amount:.2f} added to {student['name']}'s account."
         else:
-            # Handle the case where the card isn't registered yet
             message = "Error: Card not found. Please register the card first."
         conn.close()
     return render_template('topup.html', message=message)
@@ -144,15 +163,19 @@ def logout():
 
 @app.route('/export_csv')
 def export_csv():
-    if not session.get('logged_in'):
-        return redirect(url_for('admin'))
+    if not session.get('logged_in'): return redirect(url_for('admin'))
     
     conn = get_db_connection()
-    cursor = conn.execute("SELECT * FROM transactions")
+    # Joined query to get the Name instead of just the UID
+    cursor = conn.execute('''
+        SELECT transactions.timestamp, students.name, transactions.amount 
+        FROM transactions 
+        JOIN students ON transactions.card_uid = students.card_uid
+    ''')
     
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(['ID', 'Card UID', 'Amount', 'Timestamp'])
+    writer.writerow(['Timestamp', 'Student Name', 'Amount (P)']) 
     writer.writerows(cursor.fetchall())
     conn.close()
     
@@ -178,6 +201,23 @@ def wipe_db():
     
     conn.commit()
     conn.close()
+    return redirect(url_for('admin'))
+
+@app.route('/change_admin', methods=['POST'])
+def change_admin():
+    if not session.get('logged_in'): return redirect(url_for('admin'))
+    
+    new_user = request.form['new_user']
+    new_pass = request.form['new_pass']
+    
+    conn = get_db_connection()
+    conn.execute("UPDATE config SET value = ? WHERE key = 'admin_user'", (new_user,))
+    conn.execute("UPDATE config SET value = ? WHERE key = 'admin_pass'", (new_pass,))
+    conn.commit()
+    conn.close()
+    
+    # Optional: Log them out so they have to login with new credentials
+    session.pop('logged_in', None)
     return redirect(url_for('admin'))
 
 @app.context_processor

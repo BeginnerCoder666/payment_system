@@ -95,6 +95,17 @@
             {% endfor %}
         </table>
 
+        <hr style="margin-top: 40px; border: 0.5px solid #444;">
+        <h3>System Settings</h3>
+        <div style="background: #222; padding: 20px; border-radius: 8px; border: 1px solid #444; display: inline-block;">
+            <p>Change Admin Credentials</p>
+            <form action="/change_admin" method="POST">
+                <input type="text" name="new_user" placeholder="New Username" required style="margin-bottom: 5px;"><br>
+                <input type="password" name="new_pass" placeholder="New Password" required style="margin-bottom: 10px;"><br>
+                <button type="submit" style="background: #ffa500; border: none; padding: 5px 15px; cursor: pointer;">Update & Logout</button>
+            </form>
+        </div>
+
         <p style="margin-top: 20px; font-size: 0.8em; color: #888;">{{ version }}</p>
     </div>
 
