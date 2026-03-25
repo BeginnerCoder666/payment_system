@@ -1,25 +1,49 @@
 @echo off
-:: Check if Flask is installed
-python -c "import flask" 2>nul
+title 0 Piso Cash Card System - Automated Setup
+echo Checking for Python...
+python --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Flask not found. Installing dependencies...
-    pip install flask
+    echo [ERROR] Python is not installed! 
+    echo Please install Python from https://www.python.org/ and check "Add to PATH".
+    pause
+    exit
 )
 
-title 0 Piso Cash Card System
-echo Starting 0 Piso Canteen System...
+echo Checking and installing dependencies...
 
-:: Runs the Flask app in a separate background process
+:: Check for Flask
+python -c "import flask" >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Installing Flask...
+    pip install flask
+) else (
+    echo Flask is already installed.
+)
+
+:: Check for Pytz (Timezone Support)
+python -c "import pytz" >nul 2>&1
+if %errorlevel% neq 0 (
+    echo Installing Pytz...
+    pip install pytz
+) else (
+    echo Pytz is already installed.
+)
+
+echo.
+echo Starting 0 Piso System...
+:: Runs the Flask app in the background
 start /b python app.py
 
-:: Wait for 4 seconds to let the server initialize
-timeout /t 2 /nobreak >nul
+echo Waiting 5 seconds for the server to wake up...
+timeout /t 5 /nobreak >nul
 
-:: Open the browser after the delay
+:: Open the default browser
 start http://127.0.0.1:5000
 
 echo.
-echo System is running! 
-echo Keep this window open to maintain the connection.
+echo ==============================================
+echo SYSTEM IS ONLINE
+echo Please keep this window open while in use.
+echo ==============================================
 echo.
 pause
